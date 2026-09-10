@@ -56,6 +56,53 @@ float fbm(vec2 p){
 }
 `;
 
+// Shadertoy compatibility: a shader written for shadertoy.com drops in as-is,
+// with iChannel0-3 wired by the demo. Deliberately no hash21/fbm/noise here —
+// toys bring their own and a redefinition is a compile error.
+const TOY_HEAD = `
+in vec2 v_uv;
+out vec4 fragColor;
+uniform float u_time, u_dt, u_frame, u_toyTime;
+uniform vec2 u_res, u_texel, u_stateTexel, u_maskFit;
+uniform sampler2D u_state, u_prev, u_mask;
+uniform sampler2D iChannel0, iChannel1, iChannel2, iChannel3;
+
+#define texture2D texture
+#define textureCube texture
+#define iTime u_toyTime
+#define iTimeDelta u_dt
+#define iFrameRate (1.0 / max(u_dt, 1e-5))
+#define iSampleRate 44100.0
+#define iMouse vec4(0.0)
+#define iDate vec4(2026.0, 1.0, 1.0, 0.0)
+vec3 iResolution = vec3(1.0);
+int iFrame = 0;
+vec3 iChannelResolution[4];
+float iChannelTime[4];
+
+// the camera mask, aspect-corrected, with the panel's mirror/invert applied.
+// On shadertoy this would be texture(iChannel0, fragCoord/iResolution.xy).r
+float maskTex(vec2 uv){
+  uv = (uv - 0.5) * u_maskFit + 0.5;
+  if (u_mirror > 0.5) uv.x = 1.0 - uv.x;
+  float v = texture(u_mask, uv).r;
+  if (u_invert > 0.5) v = 1.0 - v;
+  return (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) ? 0.0 : v;
+}
+`;
+
+// appended after the toy's own code, so it can call mainImage
+const TOY_TAIL = `
+void main(){
+  iResolution = vec3(u_res, 1.0);
+  iFrame = int(u_frame);
+  for (int i = 0; i < 4; i++){ iChannelResolution[i] = vec3(u_res, 1.0); iChannelTime[i] = u_toyTime; }
+  vec4 c = vec4(0.0, 0.0, 0.0, 1.0);
+  mainImage(c, gl_FragCoord.xy);
+  fragColor = c;
+}
+`;
+
 export class Harness {
   static async create(opts) {
     const h = new Harness(opts);
@@ -81,7 +128,7 @@ export class Harness {
 
     this.prelude = "#version 300 es\nprecision highp float;\nprecision highp sampler2D;\n" +
       Object.keys(this.params.values).map((n) => `uniform float u_${n};`).join("\n") +
-      PRELUDE_TAIL + "\n#line 1\n"; // author line numbers in compile errors
+      (this.opts.toy ? TOY_HEAD : PRELUDE_TAIL) + "\n#line 1\n"; // author line numbers in compile errors
 
     this.params.mount(this.opts.title, KEYS);
     this.overlay = document.createElement("pre");
@@ -125,7 +172,8 @@ export class Harness {
     if (src === s.src && !force) return false;
     s.src = src;
     try {
-      const prog = new Program(this.gl, this.prelude + this.commonSrc + "\n#line 1\n" + src, s.url);
+      const body = this.prelude + this.commonSrc + "\n#line 1\n" + src + (this.opts.toy ? TOY_TAIL : "");
+      const prog = new Program(this.gl, body, s.url);
       s.prog?.dispose();
       s.prog = prog;
       this.error(null);
