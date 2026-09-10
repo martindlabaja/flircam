@@ -47,6 +47,27 @@ const SHADERS = {
       view:   { v: 0,    min: 0, max: 2,   step: 1,     label: "view 0-2" },
     },
   },
+  kintsugi: {
+    title: "Kintsugi — shadertoy + Buffer A",
+    image: "kintsugi.frag",
+    buffer: "kintsugi.buf.frag",
+    common: "kintsugi.common.frag",           // the fracture network, needed by both passes
+    // the gold runs one texel per frame along veins a texel wide, so the buffer's
+    // size is the pace and the finest crack it can carry; 540 lines is the balance
+    sim: { format: "rgba16f", clear: [0, 0, 0, 0], maxHeight: 540 },
+    params: {
+      flow:   { v: 0.6,  min: 0,   max: 1,   step: 0.01, label: "gold runs" },
+      reach:  { v: 1.0,  min: 0.2, max: 4,   step: 0.01, label: "how far it gets" },
+      linger: { v: 2.0,  min: 0.1, max: 15,  step: 0.1,  label: "flow dies after (s)" },
+      fade:   { v: 90,   min: 3,   max: 600, step: 1,    label: "gold tarnishes (s)" },
+      width:  { v: 1.0,  min: 0.5, max: 2.5, step: 0.01, label: "vein width" },
+      pulse:  { v: 0.35, min: 0,   max: 2,   step: 0.01, label: "light along veins" },
+      glow:   { v: 1.0,  min: 0,   max: 3,   step: 0.01, label: "glow around body" },
+      pool:   { v: 0.8,  min: 0,   max: 1.5, step: 0.01, label: "molten under body" },
+      drip:   { v: 0.3,  min: 0,   max: 2,   step: 0.01, label: "idle drips" },
+      view:   { v: 0,    min: 0,   max: 3,   step: 1,    label: "view 0-3" },
+    },
+  },
 };
 
 const which = new URLSearchParams(location.search).get("s") || "plasma";
@@ -60,6 +81,7 @@ const h = await Harness.create({
   title: S.title,
   toy: true,                                  // shadertoy prelude instead of ours
   shaders,
+  common: S.common,                           // a Common tab, pasted into both passes
   sim: S.buffer ? S.sim : null,
   params: { ...BASE, ...S.params },
 });

@@ -26,7 +26,7 @@ lib/harness.js   canvas, loop, sim buffer, shader hot-reload, uniform prelude
 snow/            demo 1 — thawing snow
 fireflies/       demo 2 — swarm that orbits the body, with trails
 flowers/         demo 3 — meadow that blooms in the body's wake
-toy/             player for shadertoy.com shaders (?s=plasma, ink, glacier)
+toy/             player for shadertoy.com shaders (?s=plasma, ink, glacier, kintsugi)
 ```
 
 Each demo is a folder of `index.html` + `main.js` + `.frag` files. Nothing else to register.
@@ -70,7 +70,8 @@ too, and rebuilds both passes when it changes.
 `iChannelResolution`, `texture2D` — and calls the toy's `mainImage` for it. So the
 Image tab of a shader goes into `toy/<name>.frag` verbatim.
 
-1. Paste the Image tab into `toy/<name>.frag` (a Buffer A tab into `<name>.buf.frag`).
+1. Paste the Image tab into `toy/<name>.frag` (a Buffer A tab into `<name>.buf.frag`, a
+   Common tab into `<name>.common.frag`, named as `common` in the entry).
 2. Add it to `SHADERS` in `toy/main.js` and wire the channels — that is the one thing
    shadertoy holds outside the code. `iChannel0: h.source.tex` is the mask;
    `h.pp.read.tex` is the feedback buffer. Its `params` become `u_<name>` uniforms, on
