@@ -11,7 +11,7 @@ Tick as you go. Docs: `blackfly-s-rpi-setup.md` (why), `preflight-checklist.md` 
 | Password | `optical` | console fallback only; SSH uses the key, sudo needs none |
 | SSH login | password now, key after first boot | key already exists in WSL: `~/.ssh/id_ed25519.pub` |
 | WiFi chain | `hotspot` 20 > `home` (Tomaskovi) 10 > `venue` 0 | `home` done; others via `pi/wifi.sh` |
-| Tailscale | `mask`, `100.88.7.77` | from anywhere: `ssh optical@mask`, `http://mask:8080` |
+| Tailscale | #1 `mask` `100.88.7.77`, #2 `mask-1` `100.86.146.117` | from anywhere: `ssh optical@mask`, `http://mask:8080` |
 | Country / timezone | `__` / `Europe/____` | Imager → locale settings |
 
 ## Step 1 — Flash the card (laptop, no Pi needed)
@@ -68,15 +68,15 @@ Tick as you go. Docs: `blackfly-s-rpi-setup.md` (why), `preflight-checklist.md` 
 
 Same hostname `mask` on purpose: a drop-in spare. Don't run both Pis at once on the same network (mDNS renames the second to `mask-2.local`, Tailscale to `mask-1`). All credentials come from `~/pi-images/secrets.env`; when the venue answers, fill `VENUE_SSID` / `VENUE_PASSWORD`, re-run `pi/make-cloudinit.sh`, and on the running Pi `sudo pi/wifi.sh venue "<SSID>" "<pw>"`.
 
-- [ ] Fresh card in the **built-in Realtek reader** (not the Alcor USB one — see `sd-card-recovery.md`)
-- [ ] Admin PowerShell: `Get-Disk` → card number `<n>`; if Offline: `diskpart` → `select disk <n>` → `online disk` → `exit`
-- [ ] `Start-Process -Wait -FilePath "C:\Program Files\Raspberry Pi Ltd\Imager\rpi-imager.exe" -ArgumentList '--cli','C:\Users\marti\pi-images\2026-06-18-raspios-trixie-arm64-lite.img.xz','\\.\PhysicalDrive<n>'`
-- [ ] Replug the reader; `Copy-Item C:\Users\marti\pi-images\cloudinit\* "$((Get-Volume -FileSystemLabel bootfs).DriveLetter):\"` (4 files: user-data, meta-data, network-config, wifi.env)
-- [ ] Eject, card into the second Pi, **first Pi off**, power on, wait 2 min
-- [ ] Find it: `ping.exe -4 mask.local` from WSL → IP
-- [ ] `pi/provision.sh <ip>` → copies scripts, runs setup.sh (usbfs, Aravis, OpenCV, WiFi chain from wifi.env, sudoers, service), reboots
-- [ ] `sudo tailscale up` + URL, unless `TS_AUTHKEY` was in secrets.env
-- [ ] Verify: page at `http://mask.local:8080`, `nmcli connection show` lists hotspot 20 / home 10, Power off from the page works
+- [x] Fresh card in the **built-in Realtek reader** (not the Alcor USB one — see `sd-card-recovery.md`)
+- [x] Admin PowerShell: `Get-Disk` → card number `<n>`; if Offline: `diskpart` → `select disk <n>` → `online disk` → `exit`
+- [x] `Start-Process -Wait -FilePath "C:\Program Files\Raspberry Pi Ltd\Imager\rpi-imager.exe" -ArgumentList '--cli','C:\Users\marti\pi-images\2026-06-18-raspios-trixie-arm64-lite.img.xz','\\.\PhysicalDrive<n>'`
+- [x] Replug the reader; `Copy-Item C:\Users\marti\pi-images\cloudinit\* "$((Get-Volume -FileSystemLabel bootfs).DriveLetter):\"` (4 files: user-data, meta-data, network-config, wifi.env)
+- [x] Eject, card into the second Pi, **first Pi off**, power on, wait 2 min
+- [x] Find it: `ping.exe -4 mask.local` from WSL → IP
+- [x] `pi/provision.sh <ip>` → copies scripts, runs setup.sh (usbfs, Aravis, OpenCV, WiFi chain from wifi.env, sudoers, service), reboots
+- [x] `sudo tailscale up` + URL, unless `TS_AUTHKEY` was in secrets.env → done, tailnet name `mask-1`, `100.86.146.117`
+- [x] Verify: page at `http://mask.local:8080`, `nmcli connection show` lists hotspot 20 / home 10, Power off from the page works
 - [ ] Label the card and the Pi: "mask #2"
 
 ## Step 7 — Camera arrives
@@ -87,6 +87,7 @@ Same hostname `mask` on purpose: a drop-in spare. Don't run both Pis at once on 
 
 ## Log
 
+- 2026-09-10 (night) — Second Pi (4B rev 1.5, `mask`, 192.168.1.235) provisioned: setup.sh clean, hotspot 20 / home 10, powersave off, usbfs, sudoers, service enabled, Aravis 0.8.34 + OpenCV 4.10. Card had no ssh key and sudo asked a password (Imager-style user-data), so key was added by hand and setup ran with `sudo -S`. Tailscale `mask-1` / `100.86.146.117`; Reboot button from the page works, back on home WiFi in 15 s, page 200 via LAN and tailnet, webcam ~30 fps. Pending: label the card and Pi.
 - 2026-09-10 (evening) — Fallback rehearsed: hotspot beats home at boot; Tailscale reaches the Pi across networks; OBS confirmed. Second-card recipe written (Step 6), `pi/provision.sh` added.
 - 2026-09-10 — Tailscale on Pi + WSL, works. Hotspot profile added (chain: hotspot 20 > home 10 > venue 0). Power off / Reboot buttons on the web page, reboot tested. Webcam pipeline live at 18 fps. Pending: hotspot fallback rehearsal, OBS test, venue creds.
 - 2026-09-10 — Card flashed (see `sd-card-recovery.md`). Pi boots, hostname `mask`, on Tomaskovi, key login works. `pi/setup.sh` done, rebooted: usbfs set, Aravis + OpenCV installed, service active, page answers on :8080, `home` profile active at priority 20.
