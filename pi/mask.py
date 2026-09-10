@@ -92,6 +92,7 @@ class H(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=f")
             self.send_header("Cache-Control", "no-cache")
+            self.send_header("Access-Control-Allow-Origin", "*")  # demos/ pulls the mask into a WebGL texture
             self.end_headers()
             n = -1
             try:
@@ -134,6 +135,7 @@ class H(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
 

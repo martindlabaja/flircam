@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>flircam demos</title>
+<style>
+ body{margin:0;background:#0e1013;color:#dfe3ea;font:14px/1.6 ui-sans-serif,system-ui,sans-serif}
+ main{max-width:760px;margin:0 auto;padding:40px 20px}
+ h1{font-size:20px;letter-spacing:.06em;text-transform:uppercase;color:#8ab4ff;margin:0 0 4px}
+ p.sub{color:#7c8797;margin:0 0 28px}
+ .card{display:block;border:1px solid #ffffff1a;border-radius:8px;padding:14px 16px;margin:10px 0;
+  text-decoration:none;color:inherit;background:#161a20}
+ .card:hover{border-color:#8ab4ff66;background:#1b2029}
+ .card b{display:block;font-size:15px}
+ .card span{color:#7c8797;font-size:13px}
+ .src{border:1px solid #ffffff1a;border-radius:8px;padding:14px 16px;background:#161a20;margin-bottom:26px}
+ input{width:100%;box-sizing:border-box;background:#0e1013;border:1px solid #ffffff26;border-radius:5px;
+  color:#dfe3ea;font:12px ui-monospace,monospace;padding:7px 9px;margin:8px 0}
+ button{background:#ffffff12;border:1px solid #ffffff1f;color:#dfe3ea;font:12px ui-monospace,monospace;
+  padding:5px 10px;border-radius:5px;cursor:pointer;margin-right:6px}
+ button:hover{background:#ffffff22}
+ img{margin-top:10px;max-width:220px;border:1px solid #ffffff1a;border-radius:5px;display:block}
+ code{color:#8ab4ff;font-size:12px}
+ .hint{color:#7c8797;font-size:12px}
+</style>
+<main>
+<h1>flircam demos</h1>
+<p class="sub">Mask-driven visuals. Runs in Chrome on Windows; served from WSL.</p>
+
+<div class="src">
+  <label class="hint" for="u">frame source — the Pi's mask stream, a local webcam, or a synthetic figure</label>
+  <input id="u" spellcheck="false">
+  <button id="pi">Pi</button><button id="cam">webcam</button><button id="test">test pattern</button>
+  <span class="hint" id="state"></span>
+  <img id="prev" hidden>
+</div>
+
+<a class="card" href="snow/">
+  <b>Thawing snow</b>
+  <span>Snow falls over everything; the silhouette melts it down to wet ground that
+  slowly dries. Ping-pong height field + heat diffusion.</span>
+</a>
+
+<a class="card" href="fireflies/">
+  <b>Fireflies</b>
+  <span>A swarm that hangs in the dark, wakes up near the body and orbits it,
+  leaving glowing trails. Grid-cell particles steering on a diffused mask field.</span>
+</a>
+
+<a class="card" href="flowers/">
+  <b>Flowering meadow</b>
+  <span>Grass until the body touches it; flowers open in the wake, deepen in
+  colour as they age, and slowly wilt back. Bloom field + procedural petals.</span>
+</a>
+
+<p class="hint">Keys inside a demo: <code>h</code> panel · <code>f</code> fullscreen ·
+<code>r</code> reset · <code>space</code> pause · <code>s</code> back here.
+Shaders hot-reload on save.</p>
+</main>
+<script type="module">
+import { SRC_KEY, PI_URL } from "./lib/source.js";
+const u = document.getElementById("u"), prev = document.getElementById("prev"), state = document.getElementById("state");
+u.value = localStorage.getItem(SRC_KEY) || PI_URL;
+const set = (v) => { u.value = v; save(); };
+function save() {
+  localStorage.setItem(SRC_KEY, u.value.trim());
+  const v = u.value.trim();
+  prev.hidden = !v.startsWith("http");
+  state.textContent = "";
+  if (!prev.hidden) {
+    prev.crossOrigin = "anonymous";        // same request the demos make: proves CORS works
+    prev.onerror = () => { state.textContent = "unreachable (Pi off, or mask.py without the CORS header)"; prev.hidden = true; };
+    prev.onload = () => { state.textContent = "live"; };
+    prev.src = v;
+  }
+}
+u.addEventListener("change", save);
+document.getElementById("pi").onclick = () => set(PI_URL);
+document.getElementById("cam").onclick = () => set("webcam");
+document.getElementById("test").onclick = () => set("test");
+save();
+</script>
