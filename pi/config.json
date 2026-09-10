@@ -1,0 +1,12 @@
+{
+  "source": "webcam",
+  "webcam": 0,
+  "aravis": "aravissrc ! video/x-raw,format=GRAY8,width=640,height=480 ! appsink drop=true max-buffers=1",
+  "width": 640,
+  "height": 480,
+  "threshold": 128,
+  "invert": false,
+  "blur": 3,
+  "jpeg_quality": 70,
+  "port": 8080
+}

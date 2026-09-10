@@ -6,17 +6,17 @@ Everything that can be finished at home. Only lighting, framing, and threshold t
 
 ## A. Build the image (no camera needed)
 
-Develop against any cheap webcam — swap `aravissrc` for `v4l2src` and everything downstream is identical.
+Develop against any cheap webcam — `pi/config.json` `source: webcam` now, `aravis` later; everything downstream is identical. `sudo pi/setup.sh` does the items marked ⚙.
 
 - [ ] Pi OS 64-bit (Bookworm or newer), updated
-- [ ] `usbcore.usbfs_memory_mb=1000` in `/boot/firmware/cmdline.txt`
-- [ ] `libaravis-0.8-0` + `aravis-tools-cli` installed, `aravis.rules` udev rule in place
+- [ ] ⚙ `usbcore.usbfs_memory_mb=1000` in `/boot/firmware/cmdline.txt`
+- [ ] ⚙ `libaravis-0.8-0` + `aravis-tools-cli` installed, `aravis.rules` udev rule in place
 - [ ] Pipeline sets every camera parameter on start (camera resets on power cycle) — or a default UserSet saved on-camera
 - [ ] OpenCV segmentation running
 - [ ] MJPEG HTTP output working *(this is v1 — ship it)*
 - [ ] *(v2, optional)* plain NDI output, running alongside MJPEG
-- [ ] systemd autostart on boot
-- [ ] Web UI: live preview + threshold slider
+- [ ] ⚙ systemd autostart on boot
+- [ ] Web UI: live preview + threshold slider + **Power off / Reboot** buttons (never pull the plug on a running Pi)
 - [ ] Sensible defaults — runs with zero configuration
 
 **Then clone it.** `dd` the card to an image file, flash a second card. On site you swap cards instead of debugging.
@@ -52,10 +52,10 @@ Ask the venue before travelling:
 
 On the Pi:
 
-- [ ] Hotspot profile baked in via Imager, priority 10; venue profile added, priority 0
+- [ ] Three profiles on the Pi: `hotspot` 20, `home` 10, `venue` 0 — `pi/wifi.sh`
 - [ ] WiFi power save off on both profiles, survives reboot (`iw dev wlan0 get power_save` → off)
-- [ ] `mask.local` resolves from a laptop on the hotspot, and two clients see each other
-- [ ] Fallback rehearsed once: hotspot on, Pi power-cycled, stream reachable
+- [ ] `mask.local` resolves from a laptop on home WiFi and on the hotspot; two clients see each other
+- [ ] Chain rehearsed once: home WiFi off → Pi lands on hotspot after power-cycle, stream reachable
 - [ ] Hostname and reserved venue IP **written on the case in marker**
 
 ## E. Optics — settle before you travel

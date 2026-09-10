@@ -51,9 +51,17 @@ The Pi's own supply is separate and still required: 5 V/3 A for Pi 4, 5 V/5 A fo
 
 Pi 4: both USB3 ports share one ~4 Gbps link. Pi 5: two independent 5 Gbps ports. A hub adds no bandwidth either way.
 
-## 5. Networking — venue WiFi, phone hotspot as dev network and fallback
+## 5. Networking — WiFi chain: hotspot > home > venue
 
-No Ethernet. At home, the Pi and your laptop share the phone's hotspot. On site, everything joins the venue WiFi. The Pi carries both profiles with the hotspot at higher priority, so **hotspot on + Pi power-cycle = fallback network** if the venue WiFi fails. Keep the hotspot off on site otherwise.
+No Ethernet. The Pi carries three profiles; NetworkManager joins the highest-priority one in range and drops down the chain when it fails:
+
+| Priority | Profile | When |
+|---|---|---|
+| 20 | `hotspot` | phone hotspot — **on-site fallback**, dev away from home |
+| 10 | `home` | development at home |
+| 0 | `venue` | the show |
+
+It does **not** climb back up while connected. So on site: hotspot off → Pi joins venue. Venue dies → hotspot on, power-cycle the Pi → everyone joins the hotspot. At home, keep the hotspot off while the Pi boots unless you want it there.
 
 **Venue WiFi risks — ask before travelling:**
 
@@ -66,13 +74,14 @@ No Ethernet. At home, the Pi and your laptop share the phone's hotspot. On site,
 **Pi side:**
 
 ```
-# hotspot profile comes from Imager, named "preconfigured"
-sudo nmcli connection modify preconfigured connection.autoconnect-priority 10 wifi.powersave 2
-# venue profile — at home if you have the credentials, else over SSH via the hotspot on site
-sudo nmcli device wifi connect "<venue SSID>" password "<password>" name venue
-sudo nmcli connection modify venue connection.autoconnect-priority 0 wifi.powersave 2
-iw dev wlan0 get power_save          # → off, after reboot
+# home = the network the Pi first booted on; pi/setup.sh copies it into profile "home", priority 10
+sudo pi/wifi.sh hotspot "<hotspot SSID>"     # prompts for password; or put both in secrets.env →
+sudo pi/wifi.sh venue "<venue SSID>"         #   wifi.env on the boot partition, setup.sh imports it
+nmcli -f NAME,AUTOCONNECT-PRIORITY,DEVICE connection show
+iw dev wlan0 get power_save                  # → off, after reboot
 ```
+
+WPA2-Enterprise venues need a hand-made profile instead of `wifi.sh` (`802-1x.eap peap`, identity, password).
 
 Power save off is not optional: it causes periodic latency spikes and dropouts. Pi 4/5 WiFi is weak — keep the Pi within a few metres of the access point, not in a metal case.
 
@@ -89,6 +98,8 @@ sudo apt install libaravis-0.8-0 aravis-tools-cli
 sudo cp aravis.rules /etc/udev/rules.d/   # from github.com/AravisProject/aravis — without it the camera is root-only
 arv-tool-0.8                               # lists the camera
 ```
+
+Scripted in `pi/setup.sh` (run once with sudo, then reboot). `pi/mask.py` is the v1 pipeline: capture → threshold → MJPEG on port 8080, slider and Power off / Reboot buttons at `/`, `source: webcam|aravis` in `pi/config.json`.
 
 FLIR / Point Grey USB vendor ID is `1e10`; add it to `aravis.rules` if missing.
 

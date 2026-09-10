@@ -1,0 +1,13 @@
+[Unit]
+Description=Mask appliance (camera -> threshold -> MJPEG)
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 @DIR@/mask.py
+WorkingDirectory=@DIR@
+User=@USER@
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

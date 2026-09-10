@@ -1,0 +1,15 @@
+#cloud-config
+hostname: mask
+manage_etc_hosts: true
+timezone: __TIMEZONE__
+users:
+  - name: optical
+    groups: users,adm,dialout,audio,netdev,video,plugdev,cdrom,games,input,gpio,spi,i2c,render,sudo
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: "__HASH__"
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - __KEY__
+enable_ssh: true
+ssh_pwauth: true
